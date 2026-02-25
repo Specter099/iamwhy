@@ -6,14 +6,10 @@ Also enumerates attached policies.
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
 
 from botocore.exceptions import ClientError
 
 from .models import PrincipalInfo, PrincipalType
-
-if TYPE_CHECKING:
-    pass
 
 # arn:aws:iam::123456789012:user/alice
 # arn:aws:iam::123456789012:role/MyRole
