@@ -29,7 +29,7 @@ These make the difference between people starring and people contributing.
 - [x] **Labels** — Consistent taxonomy (`good first issue`, `help wanted`, `bug`, `enhancement`).
 - [x] **CODE_OF_CONDUCT.md** — Sets community expectations. Use GitHub's built-in Contributor Covenant template.
 
-## P3 — Operational Maturity (As Project Grows)
+## P3 — Operational Maturity (As Project Grows) — Done
 
 Add these once you have active users or contributors.
 
