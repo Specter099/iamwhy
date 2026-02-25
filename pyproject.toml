@@ -40,6 +40,7 @@ dev = [
     "pytest-mock>=3.12",
     "moto[iam]>=5.0",
     "coverage[toml]>=7.0",
+    "ruff>=0.8",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -56,3 +57,10 @@ branch = true
 [tool.coverage.report]
 show_missing = true
 fail_under = 80
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]

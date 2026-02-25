@@ -1,4 +1,5 @@
 """iamwhy CLI entry point."""
+
 from __future__ import annotations
 
 import sys
@@ -95,11 +96,11 @@ def main(
 
     # 4. Simulate
     try:
-        sim_result = simulate(principal_info.arn, action, resource, context_entries, iam)
-    except SimulationError as exc:
-        err.print(
-            f"[bold red]Simulation error ({exc.error_code}):[/bold red] {exc}"
+        sim_result = simulate(
+            principal_info.arn, action, resource, context_entries, iam
         )
+    except SimulationError as exc:
+        err.print(f"[bold red]Simulation error ({exc.error_code}):[/bold red] {exc}")
         if exc.error_code == "AccessDenied":
             err.print(
                 "[dim]iamwhy requires iam:SimulatePrincipalPolicy and "

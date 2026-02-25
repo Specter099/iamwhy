@@ -1,7 +1,7 @@
 """Shared pytest fixtures for iamwhy tests."""
-import os
-import pytest
+
 import boto3
+import pytest
 
 # moto is imported lazily inside fixtures so the import error surface is clear.
 

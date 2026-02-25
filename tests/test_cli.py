@@ -1,14 +1,15 @@
 """Tests for iamwhy.cli — uses Click's CliRunner and pytest-mock."""
+
 import json
-import pytest
-from click.testing import CliRunner
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
 from botocore.exceptions import ClientError, ProfileNotFound
+from click.testing import CliRunner
 
 from iamwhy.cli import main
 from iamwhy.models import (
-    DenialCause,
     DecisionType,
+    DenialCause,
     PrincipalInfo,
     PrincipalType,
     SimulationResult,
@@ -91,9 +92,11 @@ def _patch_all(
 
     @contextlib.contextmanager
     def _ctx():
-        with _patch("iamwhy.cli.resolve_principal", return_value=resolve_return) as rp, \
-             _patch("iamwhy.cli.simulate", return_value=sim_return) as sim, \
-             _patch("iamwhy.cli.analyze", return_value=analyze_return) as ana:
+        with (
+            _patch("iamwhy.cli.resolve_principal", return_value=resolve_return) as rp,
+            _patch("iamwhy.cli.simulate", return_value=sim_return) as sim,
+            _patch("iamwhy.cli.analyze", return_value=analyze_return) as ana,
+        ):
             yield rp, sim, ana
 
     return _ctx()
@@ -102,6 +105,7 @@ def _patch_all(
 # ---------------------------------------------------------------------------
 # Basic invocation
 # ---------------------------------------------------------------------------
+
 
 def test_cli_help():
     runner = CliRunner()
@@ -146,7 +150,9 @@ def test_cli_json_output():
 def test_cli_resource_option_passed_to_simulate():
     runner = CliRunner()
     with _patch_all() as (rp, sim, ana):
-        runner.invoke(main, ["alice", "s3:GetObject", "--resource", "arn:aws:s3:::bucket"])
+        runner.invoke(
+            main, ["alice", "s3:GetObject", "--resource", "arn:aws:s3:::bucket"]
+        )
     sim.assert_called_once()
     call_args = sim.call_args
     assert call_args.args[2] == "arn:aws:s3:::bucket"
@@ -155,10 +161,15 @@ def test_cli_resource_option_passed_to_simulate():
 def test_cli_context_option_parsed():
     runner = CliRunner()
     with _patch_all() as (rp, sim, ana):
-        runner.invoke(main, [
-            "alice", "s3:GetObject",
-            "--context", "aws:SourceIp=1.2.3.4",
-        ])
+        runner.invoke(
+            main,
+            [
+                "alice",
+                "s3:GetObject",
+                "--context",
+                "aws:SourceIp=1.2.3.4",
+            ],
+        )
     sim.assert_called_once()
     call_args = sim.call_args
     context_entries = call_args.args[3]
@@ -168,16 +179,22 @@ def test_cli_context_option_parsed():
 def test_cli_invalid_context_exits_2():
     runner = CliRunner()
     with _patch_all():
-        result = runner.invoke(main, [
-            "alice", "s3:GetObject",
-            "--context", "no-equals-sign",
-        ])
+        result = runner.invoke(
+            main,
+            [
+                "alice",
+                "s3:GetObject",
+                "--context",
+                "no-equals-sign",
+            ],
+        )
     assert result.exit_code == 2
 
 
 # ---------------------------------------------------------------------------
 # Error handling
 # ---------------------------------------------------------------------------
+
 
 def test_cli_resolve_value_error_exits_2():
     runner = CliRunner()
@@ -188,7 +205,9 @@ def test_cli_resolve_value_error_exits_2():
 
 def test_cli_resolve_client_error_exits_2():
     runner = CliRunner()
-    err = ClientError({"Error": {"Code": "AccessDenied", "Message": "denied"}}, "GetUser")
+    err = ClientError(
+        {"Error": {"Code": "AccessDenied", "Message": "denied"}}, "GetUser"
+    )
     with patch("iamwhy.cli.resolve_principal", side_effect=err):
         result = runner.invoke(main, ["alice", "s3:GetObject"])
     assert result.exit_code == 2
@@ -196,6 +215,7 @@ def test_cli_resolve_client_error_exits_2():
 
 def test_cli_simulation_error_exits_2():
     from iamwhy.simulator import SimulationError
+
     runner = CliRunner()
     with _patch_all() as (rp, sim, ana):
         sim.side_effect = SimulationError("fail", "AccessDenied")
@@ -217,5 +237,7 @@ def test_cli_profile_not_found_exits_2():
         "iamwhy.cli.boto3.Session",
         side_effect=ProfileNotFound(profile="nonexistent"),
     ):
-        result = runner.invoke(main, ["alice", "s3:GetObject", "--profile", "nonexistent"])
+        result = runner.invoke(
+            main, ["alice", "s3:GetObject", "--profile", "nonexistent"]
+        )
     assert result.exit_code == 2

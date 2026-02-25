@@ -1,9 +1,8 @@
 """Render a Verdict to the terminal (Rich) or as JSON."""
+
 from __future__ import annotations
 
-import dataclasses
 import json
-import sys
 from typing import Optional
 
 from rich.console import Console
@@ -11,12 +10,12 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from .models import DecisionType, DenialCause, PolicyBreakdown, Verdict
-
+from .models import DecisionType, PolicyBreakdown, Verdict
 
 # ---------------------------------------------------------------------------
 # Public interface
 # ---------------------------------------------------------------------------
+
 
 class TextFormatter:
     """Renders a Verdict using Rich for human-readable terminal output."""
@@ -77,7 +76,10 @@ class TextFormatter:
 
         # Extra flags
         if verdict.orgs_blocked:
-            c.print("[yellow]Note:[/yellow] An SCP denies this action at the organization level.")
+            c.print(
+                "[yellow]Note:[/yellow] An SCP denies this action"
+                " at the organization level."
+            )
         if verdict.boundary_blocked:
             c.print(
                 "[yellow]Note:[/yellow] The principal's permissions boundary does not "
@@ -108,6 +110,7 @@ def get_formatter(
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 def _verdict_label(decision: DecisionType) -> tuple[str, str]:
     if decision == DecisionType.ALLOWED:

@@ -1,7 +1,9 @@
 """Tests for iamwhy.simulator."""
+
+from unittest.mock import MagicMock
+
 import pytest
 from botocore.exceptions import ClientError
-from unittest.mock import MagicMock, patch
 
 from iamwhy.simulator import SimulationError, build_context_entries, simulate
 
@@ -12,13 +14,15 @@ _TRUST = (
     '"Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}]}'
 )
 _ALLOW_S3 = (
-    '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"s3:*","Resource":"*"}]}'
+    '{"Version":"2012-10-17","Statement":'
+    '[{"Effect":"Allow","Action":"s3:*","Resource":"*"}]}'
 )
 
 
 # ---------------------------------------------------------------------------
 # build_context_entries — pure unit tests
 # ---------------------------------------------------------------------------
+
 
 def test_build_context_entries_basic():
     result = build_context_entries(["aws:SourceIp=1.2.3.4"])
@@ -64,6 +68,7 @@ def test_build_context_entries_empty_key_raises():
 # simulate() — moto + pytest-mock
 # ---------------------------------------------------------------------------
 
+
 def _mock_iam_with_result(eval_result: dict):
     """Return a mock IAM client whose paginator yields one page with eval_result."""
     mock_page_iter = MagicMock()
@@ -102,7 +107,9 @@ def test_simulate_allowed():
             "EvalActionName": "s3:GetObject",
             "EvalResourceName": "*",
             "EvalDecision": "allowed",
-            "MatchedStatements": [{"SourcePolicyId": "S3Full", "SourcePolicyType": "IAMPolicy"}],
+            "MatchedStatements": [
+                {"SourcePolicyId": "S3Full", "SourcePolicyType": "IAMPolicy"}
+            ],
             "EvalDecisionDetails": {"S3Full": "allowed"},
             "MissingContextValues": [],
         }
@@ -149,6 +156,7 @@ def test_simulate_returns_simulation_result_type():
 # Error handling — pytest-mock (inject ClientError without real AWS)
 # ---------------------------------------------------------------------------
 
+
 def _make_client_error(code: str, message: str = "msg") -> ClientError:
     return ClientError(
         {"Error": {"Code": code, "Message": message}}, "SimulatePrincipalPolicy"
@@ -194,9 +202,7 @@ def test_simulate_service_failure_raises_simulation_error():
 
 def test_simulate_empty_results_raises_simulation_error():
     mock_page_iter = MagicMock()
-    mock_page_iter.__iter__ = MagicMock(
-        return_value=iter([{"EvaluationResults": []}])
-    )
+    mock_page_iter.__iter__ = MagicMock(return_value=iter([{"EvaluationResults": []}]))
     mock_paginator = MagicMock()
     mock_paginator.paginate.return_value = mock_page_iter
     mock_client = MagicMock()

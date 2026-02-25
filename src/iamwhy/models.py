@@ -1,4 +1,5 @@
 """Pure data models for iamwhy. No I/O, no AWS calls."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

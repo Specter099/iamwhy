@@ -1,13 +1,13 @@
 """Tests for iamwhy.formatters."""
+
 import json
-import io
-import pytest
+
 from rich.console import Console
 
 from iamwhy.formatters import JsonFormatter, TextFormatter, get_formatter
 from iamwhy.models import (
-    DenialCause,
     DecisionType,
+    DenialCause,
     PolicyBreakdown,
     PolicySource,
     PrincipalInfo,
@@ -54,6 +54,7 @@ def _record_console() -> Console:
 # ---------------------------------------------------------------------------
 # TextFormatter
 # ---------------------------------------------------------------------------
+
 
 def test_text_formatter_allowed_verdict():
     console = _record_console()
@@ -127,7 +128,12 @@ def test_text_formatter_blocking_policy_with_source():
         actions=("s3:*",),
         resources=("*",),
         sid="DenyS3",
-        raw_statement={"Sid": "DenyS3", "Effect": "Deny", "Action": "s3:*", "Resource": "*"},
+        raw_statement={
+            "Sid": "DenyS3",
+            "Effect": "Deny",
+            "Action": "s3:*",
+            "Resource": "*",
+        },
     )
     bp = PolicyBreakdown(
         policy_id="arn:aws:iam::123:policy/DenyAll",
@@ -197,7 +203,9 @@ def test_text_formatter_orgs_note():
 
 def test_text_formatter_boundary_note():
     console = _record_console()
-    verdict = _make_verdict(boundary_blocked=True, cause=DenialCause.PERMISSIONS_BOUNDARY)
+    verdict = _make_verdict(
+        boundary_blocked=True, cause=DenialCause.PERMISSIONS_BOUNDARY
+    )
     TextFormatter(console=console).render(verdict)
     output = console.export_text()
     assert "boundary" in output.lower()
@@ -207,10 +215,12 @@ def test_text_formatter_boundary_note():
 # JsonFormatter
 # ---------------------------------------------------------------------------
 
+
 def _capture_json(verdict: Verdict) -> dict:
     """Capture JsonFormatter output by monkeypatching print."""
     captured: list[str] = []
     import builtins
+
     original_print = builtins.print
 
     def fake_print(*args, **kwargs):
@@ -235,16 +245,26 @@ def test_json_formatter_required_keys():
     verdict = _make_verdict()
     data = _capture_json(verdict)
     required = {
-        "principal", "principal_type", "action", "resource",
-        "decision", "cause", "summary", "orgs_blocked",
-        "boundary_blocked", "missing_context", "blocking_policies",
+        "principal",
+        "principal_type",
+        "action",
+        "resource",
+        "decision",
+        "cause",
+        "summary",
+        "orgs_blocked",
+        "boundary_blocked",
+        "missing_context",
+        "blocking_policies",
         "all_breakdown",
     }
     assert required.issubset(data.keys())
 
 
 def test_json_formatter_decision_value():
-    verdict = _make_verdict(decision=DecisionType.EXPLICIT_DENY, cause=DenialCause.EXPLICIT_DENY)
+    verdict = _make_verdict(
+        decision=DecisionType.EXPLICIT_DENY, cause=DenialCause.EXPLICIT_DENY
+    )
     data = _capture_json(verdict)
     assert data["decision"] == "explicitDeny"
     assert data["cause"] == "explicit_deny"
@@ -258,9 +278,16 @@ def test_json_formatter_blocking_policies_with_statement():
         actions=("s3:*",),
         resources=("*",),
         sid="DenyAll",
-        raw_statement={"Sid": "DenyAll", "Effect": "Deny", "Action": "s3:*", "Resource": "*"},
+        raw_statement={
+            "Sid": "DenyAll",
+            "Effect": "Deny",
+            "Action": "s3:*",
+            "Resource": "*",
+        },
     )
-    bp = PolicyBreakdown(policy_id="arn:aws:iam::123:policy/P", decision="explicitDeny", source=src)
+    bp = PolicyBreakdown(
+        policy_id="arn:aws:iam::123:policy/P", decision="explicitDeny", source=src
+    )
     verdict = _make_verdict(
         decision=DecisionType.EXPLICIT_DENY,
         cause=DenialCause.EXPLICIT_DENY,
@@ -285,6 +312,7 @@ def test_json_formatter_null_statement_when_no_source():
 # ---------------------------------------------------------------------------
 # get_formatter factory
 # ---------------------------------------------------------------------------
+
 
 def test_get_formatter_text():
     f = get_formatter("text")

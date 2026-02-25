@@ -1,11 +1,12 @@
 """Interpret a SimulationResult into a human-readable Verdict."""
+
 from __future__ import annotations
 
 from botocore.exceptions import ClientError
 
 from .models import (
-    DenialCause,
     DecisionType,
+    DenialCause,
     PolicyBreakdown,
     PolicySource,
     PrincipalInfo,
@@ -38,9 +39,7 @@ def analyze(
     )
 
     # Determine blocking policies (those with explicitDeny or the overall deny)
-    blocking_policies = tuple(
-        b for b in all_breakdown if b.decision == "explicitDeny"
-    )
+    blocking_policies = tuple(b for b in all_breakdown if b.decision == "explicitDeny")
 
     # Optionally enrich blocking policies with statement text
     if fetch_statements and result.matched_statements:
@@ -101,6 +100,7 @@ def analyze(
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+
 def _map_decision(raw: str) -> DecisionType:
     try:
         return DecisionType(raw)
@@ -149,7 +149,11 @@ def _build_summary(
         return "Access is allowed."
 
     policy_names = [bp.policy_id for bp in blocking_policies]
-    policy_str = ", ".join(f'"{p}"' for p in policy_names) if policy_names else "an unknown policy"
+    policy_str = (
+        ", ".join(f'"{p}"' for p in policy_names)
+        if policy_names
+        else "an unknown policy"
+    )
 
     if cause == DenialCause.EXPLICIT_DENY:
         return f"An explicit Deny statement in {policy_str} overrides any Allow."
@@ -168,7 +172,8 @@ def _build_summary(
     if cause == DenialCause.MISSING_CONTEXT:
         keys = ", ".join(missing_context)
         return (
-            f"Access could not be evaluated because required context key(s) are missing: {keys}. "
+            "Access could not be evaluated because required"
+            f" context key(s) are missing: {keys}. "
             "The simulation defaulted to deny."
         )
     # COMBINED — enumerate all active causes
@@ -190,6 +195,7 @@ def _build_summary(
 # Statement retrieval
 # ---------------------------------------------------------------------------
 
+
 def _fetch_policy_source(
     matched: dict,
     principal: PrincipalInfo,
@@ -206,7 +212,9 @@ def _fetch_policy_source(
         if policy_type in ("IAMPolicy",):
             return _fetch_managed_policy_source(policy_id, iam_client)
         if policy_type in ("User", "Group", "Role"):
-            return _fetch_inline_policy_source(policy_id, policy_type, principal, iam_client)
+            return _fetch_inline_policy_source(
+                policy_id, policy_type, principal, iam_client
+            )
         # Unknown type — return a minimal source with no statement text
         return PolicySource(
             policy_id=policy_id,
@@ -232,9 +240,9 @@ def _fetch_policy_source(
 def _fetch_managed_policy_source(policy_arn: str, iam_client) -> PolicySource:
     pol = iam_client.get_policy(PolicyArn=policy_arn)["Policy"]
     version_id = pol["DefaultVersionId"]
-    version = iam_client.get_policy_version(
-        PolicyArn=policy_arn, VersionId=version_id
-    )["PolicyVersion"]
+    version = iam_client.get_policy_version(PolicyArn=policy_arn, VersionId=version_id)[
+        "PolicyVersion"
+    ]
     document = version["Document"]
     statements = document.get("Statement", [])
     # Return the first statement as a representative (caller can inspect all)

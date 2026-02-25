@@ -1,10 +1,12 @@
 """Tests for iamwhy.models — pure data, no AWS calls."""
+
 import dataclasses
+
 import pytest
 
 from iamwhy.models import (
-    DenialCause,
     DecisionType,
+    DenialCause,
     PolicyBreakdown,
     PolicySource,
     PrincipalInfo,
@@ -13,10 +15,10 @@ from iamwhy.models import (
     Verdict,
 )
 
-
 # ---------------------------------------------------------------------------
 # PrincipalInfo
 # ---------------------------------------------------------------------------
+
 
 def test_principal_info_frozen():
     p = PrincipalInfo(
@@ -48,6 +50,7 @@ def test_principal_info_assumed_role_session_name():
 # Enums
 # ---------------------------------------------------------------------------
 
+
 def test_decision_type_values():
     assert DecisionType.ALLOWED.value == "allowed"
     assert DecisionType.EXPLICIT_DENY.value == "explicitDeny"
@@ -72,6 +75,7 @@ def test_principal_type_values():
 # ---------------------------------------------------------------------------
 # SimulationResult
 # ---------------------------------------------------------------------------
+
 
 def test_simulation_result_frozen():
     r = SimulationResult(
@@ -110,8 +114,11 @@ def test_simulation_result_defaults():
 # PolicyBreakdown
 # ---------------------------------------------------------------------------
 
+
 def test_policy_breakdown_source_optional():
-    b = PolicyBreakdown(policy_id="arn:aws:iam::aws:policy/ReadOnlyAccess", decision="allowed")
+    b = PolicyBreakdown(
+        policy_id="arn:aws:iam::aws:policy/ReadOnlyAccess", decision="allowed"
+    )
     assert b.source is None
 
 
@@ -123,7 +130,12 @@ def test_policy_breakdown_with_source():
         actions=("s3:GetObject",),
         resources=("*",),
         sid="ReadS3",
-        raw_statement={"Sid": "ReadS3", "Effect": "Allow", "Action": "s3:GetObject", "Resource": "*"},
+        raw_statement={
+            "Sid": "ReadS3",
+            "Effect": "Allow",
+            "Action": "s3:GetObject",
+            "Resource": "*",
+        },
     )
     b = PolicyBreakdown(
         policy_id="arn:aws:iam::aws:policy/ReadOnlyAccess",
@@ -137,6 +149,7 @@ def test_policy_breakdown_with_source():
 # ---------------------------------------------------------------------------
 # Verdict
 # ---------------------------------------------------------------------------
+
 
 def _make_principal() -> PrincipalInfo:
     return PrincipalInfo(

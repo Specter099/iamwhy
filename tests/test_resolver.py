@@ -1,6 +1,6 @@
 """Tests for iamwhy.resolver."""
+
 import pytest
-from botocore.exceptions import ClientError
 
 from iamwhy.models import PrincipalType
 from iamwhy.resolver import enumerate_policy_ids, resolve_principal
@@ -12,13 +12,15 @@ _TRUST = (
     '"Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}]}'
 )
 _POLICY_DOC = (
-    '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"s3:*","Resource":"*"}]}'
+    '{"Version":"2012-10-17","Statement":'
+    '[{"Effect":"Allow","Action":"s3:*","Resource":"*"}]}'
 )
 
 
 # ---------------------------------------------------------------------------
 # ARN parsing — unit-level (no moto needed)
 # ---------------------------------------------------------------------------
+
 
 def test_resolve_user_arn(moto_iam):
     moto_iam.create_user(UserName="alice")
@@ -81,11 +83,10 @@ def test_resolve_unsupported_arn_raises(moto_iam):
 # enumerate_policy_ids
 # ---------------------------------------------------------------------------
 
+
 def test_enumerate_user_managed_policy(moto_iam):
     moto_iam.create_user(UserName="carol")
-    pol = moto_iam.create_policy(
-        PolicyName="MyPolicy", PolicyDocument=_POLICY_DOC
-    )
+    pol = moto_iam.create_policy(PolicyName="MyPolicy", PolicyDocument=_POLICY_DOC)
     pol_arn = pol["Policy"]["Arn"]
     moto_iam.attach_user_policy(UserName="carol", PolicyArn=pol_arn)
 
@@ -126,9 +127,7 @@ def test_enumerate_user_group_policy(moto_iam):
     moto_iam.create_user(UserName="eve")
     moto_iam.create_group(GroupName="Devs")
     moto_iam.add_user_to_group(UserName="eve", GroupName="Devs")
-    pol = moto_iam.create_policy(
-        PolicyName="GroupPolicy", PolicyDocument=_POLICY_DOC
-    )
+    pol = moto_iam.create_policy(PolicyName="GroupPolicy", PolicyDocument=_POLICY_DOC)
     pol_arn = pol["Policy"]["Arn"]
     moto_iam.attach_group_policy(GroupName="Devs", PolicyArn=pol_arn)
 
@@ -148,9 +147,7 @@ def test_enumerate_user_group_policy(moto_iam):
 
 def test_enumerate_role_managed_policy(moto_iam):
     moto_iam.create_role(RoleName="R1", AssumeRolePolicyDocument=_TRUST)
-    pol = moto_iam.create_policy(
-        PolicyName="RolePolicy", PolicyDocument=_POLICY_DOC
-    )
+    pol = moto_iam.create_policy(PolicyName="RolePolicy", PolicyDocument=_POLICY_DOC)
     pol_arn = pol["Policy"]["Arn"]
     moto_iam.attach_role_policy(RoleName="R1", PolicyArn=pol_arn)
 

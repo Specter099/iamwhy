@@ -1,4 +1,5 @@
 """Wrapper around IAM SimulatePrincipalPolicy API."""
+
 from __future__ import annotations
 
 from botocore.exceptions import ClientError
@@ -96,9 +97,7 @@ def build_context_entries(raw_pairs: list[str]) -> list[dict]:
         key, value = pair.split("=", 1)
         key = key.strip()
         if not key:
-            raise ValueError(
-                f"Invalid context entry {pair!r}: key cannot be empty."
-            )
+            raise ValueError(f"Invalid context entry {pair!r}: key cannot be empty.")
         entries.append(
             {
                 "ContextKeyName": key,
@@ -112,6 +111,7 @@ def build_context_entries(raw_pairs: list[str]) -> list[dict]:
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 def _handle_client_error(exc: ClientError) -> None:
     code = exc.response["Error"]["Code"]

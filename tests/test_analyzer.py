@@ -1,12 +1,13 @@
 """Tests for iamwhy.analyzer — all use pre-built SimulationResult fixtures, no moto."""
-import pytest
-from unittest.mock import MagicMock, call
+
+from unittest.mock import MagicMock
+
 from botocore.exceptions import ClientError
 
 from iamwhy.analyzer import analyze
 from iamwhy.models import (
-    DenialCause,
     DecisionType,
+    DenialCause,
     PrincipalInfo,
     PrincipalType,
     SimulationResult,
@@ -52,6 +53,7 @@ def _mock_iam():
 # Decision type mapping
 # ---------------------------------------------------------------------------
 
+
 def test_analyze_allowed():
     result = _make_result(eval_decision="allowed")
     verdict = analyze(result, _PRINCIPAL, _mock_iam(), fetch_statements=False)
@@ -79,6 +81,7 @@ def test_analyze_implicit_deny():
 # ---------------------------------------------------------------------------
 # Cause determination
 # ---------------------------------------------------------------------------
+
 
 def test_analyze_scp_block():
     result = _make_result(eval_decision="implicitDeny", orgs_allowed=False)
@@ -128,6 +131,7 @@ def test_analyze_combined_boundary_and_explicit_deny():
 # Summary text sanity checks
 # ---------------------------------------------------------------------------
 
+
 def test_summary_explicit_deny_mentions_policy():
     result = _make_result(
         eval_decision="explicitDeny",
@@ -174,6 +178,7 @@ def test_summary_permissions_boundary():
 # fetch_statements=False skips all GetPolicy calls
 # ---------------------------------------------------------------------------
 
+
 def test_fetch_statements_false_no_api_calls():
     mock_iam = MagicMock()
     result = _make_result(
@@ -191,6 +196,7 @@ def test_fetch_statements_false_no_api_calls():
 # Graceful degradation: ClientError on GetPolicyVersion → raw_statement=None
 # ---------------------------------------------------------------------------
 
+
 def test_fetch_statements_client_error_degrades_gracefully():
     mock_iam = MagicMock()
     mock_iam.get_policy.side_effect = ClientError(
@@ -200,7 +206,10 @@ def test_fetch_statements_client_error_degrades_gracefully():
     result = _make_result(
         eval_decision="explicitDeny",
         matched_statements=(
-            {"SourcePolicyId": "arn:aws:iam::123:policy/P", "SourcePolicyType": "IAMPolicy"},
+            {
+                "SourcePolicyId": "arn:aws:iam::123:policy/P",
+                "SourcePolicyType": "IAMPolicy",
+            },
         ),
     )
     verdict = analyze(result, _PRINCIPAL, mock_iam, fetch_statements=True)
@@ -213,6 +222,7 @@ def test_fetch_statements_client_error_degrades_gracefully():
 # ---------------------------------------------------------------------------
 # Verdict fields are consistent
 # ---------------------------------------------------------------------------
+
 
 def test_verdict_principal_passthrough():
     result = _make_result(eval_decision="implicitDeny")
@@ -240,6 +250,7 @@ def test_verdict_all_breakdown_populated():
 # COMBINED summary text
 # ---------------------------------------------------------------------------
 
+
 def test_summary_combined_mentions_factors():
     result = _make_result(
         eval_decision="explicitDeny",
@@ -248,7 +259,11 @@ def test_summary_combined_mentions_factors():
     )
     verdict = analyze(result, _PRINCIPAL, _mock_iam(), fetch_statements=False)
     assert verdict.cause == DenialCause.COMBINED
-    assert "multiple factors" in verdict.summary.lower() or "SCP" in verdict.summary or "deny" in verdict.summary.lower()
+    assert (
+        "multiple factors" in verdict.summary.lower()
+        or "SCP" in verdict.summary
+        or "deny" in verdict.summary.lower()
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -353,10 +368,13 @@ def test_fetch_statements_inline_role_policy(moto_iam):
 # _normalize_list via fetch path
 # ---------------------------------------------------------------------------
 
+
 def test_normalize_list_string_action(moto_iam):
     """Policies with a single Action string (not list) are normalised correctly."""
     # The POLICY_DOC_DENY above has "Action":"s3:*" (string, not list)
-    pol = moto_iam.create_policy(PolicyName="DenyAllStr", PolicyDocument=_POLICY_DOC_DENY)
+    pol = moto_iam.create_policy(
+        PolicyName="DenyAllStr", PolicyDocument=_POLICY_DOC_DENY
+    )
     pol_arn = pol["Policy"]["Arn"]
     result = _make_result(
         eval_decision="explicitDeny",
