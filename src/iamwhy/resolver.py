@@ -5,11 +5,14 @@ Also enumerates attached policies.
 
 from __future__ import annotations
 
+import logging
 import re
 
 from botocore.exceptions import ClientError
 
 from .models import PrincipalInfo, PrincipalType
+
+logger = logging.getLogger(__name__)
 
 # arn:aws:iam::123456789012:user/alice
 # arn:aws:iam::123456789012:role/MyRole
@@ -166,7 +169,11 @@ def _fetch_role_info(
 def _account_from_arn(arn: str) -> str:
     """Extract the 12-digit account ID from an ARN."""
     parts = arn.split(":")
-    return parts[4] if len(parts) >= 5 else ""
+    if len(parts) < 5:
+        raise ValueError(
+            f"Malformed ARN (expected at least 5 colon-separated parts): {arn!r}"
+        )
+    return parts[4]
 
 
 # ---------------------------------------------------------------------------
@@ -206,8 +213,15 @@ def _enumerate_user_policies(username: str, iam_client) -> list[str]:
                 for gpage in gip.paginate(GroupName=gname):
                     for iname in gpage["PolicyNames"]:
                         policy_ids.append(f"inline:group/{gname}/{iname}")
-    except ClientError:
-        pass
+    except ClientError as exc:
+        code = exc.response["Error"]["Code"]
+        logger.warning(
+            "Could not enumerate group policies for %s (%s: %s). "
+            "Analysis may be incomplete.",
+            username,
+            code,
+            exc.response["Error"]["Message"],
+        )
 
     return policy_ids
 
