@@ -35,7 +35,7 @@ Add these once you have active users or contributors.
 
 - [x] **CODEOWNERS file** — Auto-assign reviewers by file path.
 - [x] **CHANGELOG.md** — Track notable changes per release using [semantic versioning](https://semver.org/).
-- [ ] **Automated releases** — Tag-based releases with auto-generated changelogs.
+- [x] **Automated releases** — Tag-based releases with auto-generated changelogs.
 - [x] **Stale bot** — Auto-close inactive issues and PRs after a configurable grace period.
 - [x] **Enable Discussions** — Offload Q&A and general conversation from issues.
 - [x] **Semantic versioning** — Maintain a predictable release cadence.
