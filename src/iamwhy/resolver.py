@@ -1,4 +1,8 @@
-"""Resolve an IAM principal string to a PrincipalInfo and enumerate attached policies."""
+"""Resolve an IAM principal string to a PrincipalInfo.
+
+Also enumerates attached policies.
+"""
+
 from __future__ import annotations
 
 import re
@@ -9,7 +13,7 @@ from botocore.exceptions import ClientError
 from .models import PrincipalInfo, PrincipalType
 
 if TYPE_CHECKING:
-    import boto3
+    pass
 
 # arn:aws:iam::123456789012:user/alice
 # arn:aws:iam::123456789012:role/MyRole
@@ -59,6 +63,7 @@ def enumerate_policy_ids(principal: PrincipalInfo, iam_client) -> list[str]:
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
 
 def _resolve_arn(m: re.Match, raw_input: str, iam_client) -> PrincipalInfo:
     service = m.group("service")
@@ -132,7 +137,9 @@ def _resolve_bare_name(name: str, iam_client) -> PrincipalInfo:
     )
 
 
-def _fetch_user_info(username: str, account_id: str, raw_input: str, iam_client) -> PrincipalInfo:
+def _fetch_user_info(
+    username: str, account_id: str, raw_input: str, iam_client
+) -> PrincipalInfo:
     resp = iam_client.get_user(UserName=username)
     user = resp["User"]
     return PrincipalInfo(
@@ -145,7 +152,9 @@ def _fetch_user_info(username: str, account_id: str, raw_input: str, iam_client)
     )
 
 
-def _fetch_role_info(role_name: str, account_id: str, raw_input: str, iam_client) -> PrincipalInfo:
+def _fetch_role_info(
+    role_name: str, account_id: str, raw_input: str, iam_client
+) -> PrincipalInfo:
     resp = iam_client.get_role(RoleName=role_name)
     role = resp["Role"]
     return PrincipalInfo(
@@ -167,6 +176,7 @@ def _account_from_arn(arn: str) -> str:
 # ---------------------------------------------------------------------------
 # Policy enumeration helpers
 # ---------------------------------------------------------------------------
+
 
 def _enumerate_user_policies(username: str, iam_client) -> list[str]:
     policy_ids: list[str] = []
