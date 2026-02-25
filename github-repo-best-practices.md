@@ -25,7 +25,7 @@ These make the difference between people starring and people contributing.
 
 - [x] **CONTRIBUTING.md** — How to contribute, coding standards, PR process, and development setup.
 - [x] **Issue templates** — Structured templates for bug reports and feature requests (`.github/ISSUE_TEMPLATE/`).
-- [ ] **PR template** — Checklist covering description, testing, and breaking changes (`.github/pull_request_template.md`).
+- [x] **PR template** — Checklist covering description, testing, and breaking changes (`.github/pull_request_template.md`).
 - [ ] **Labels** — Consistent taxonomy (`good first issue`, `help wanted`, `bug`, `enhancement`).
 - [ ] **CODE_OF_CONDUCT.md** — Sets community expectations. Use GitHub's built-in Contributor Covenant template.
 
