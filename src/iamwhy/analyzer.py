@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from botocore.exceptions import ClientError
 
 from .models import (
@@ -14,6 +16,8 @@ from .models import (
     SimulationResult,
     Verdict,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def analyze(
@@ -45,7 +49,9 @@ def analyze(
     if fetch_statements and result.matched_statements:
         enriched = []
         for stmt in result.matched_statements:
-            source = _fetch_policy_source(stmt, principal, iam_client)
+            source = _fetch_policy_source(
+                stmt, principal, iam_client, result.eval_decision
+            )
             enriched.append(
                 PolicyBreakdown(
                     policy_id=stmt.get("SourcePolicyId", "unknown"),
@@ -200,6 +206,7 @@ def _fetch_policy_source(
     matched: dict,
     principal: PrincipalInfo,
     iam_client,
+    eval_decision: str = "",
 ) -> PolicySource | None:
     """
     Resolve a MatchedStatement dict to a PolicySource with raw_statement.
@@ -210,10 +217,10 @@ def _fetch_policy_source(
 
     try:
         if policy_type in ("IAMPolicy",):
-            return _fetch_managed_policy_source(policy_id, iam_client)
+            return _fetch_managed_policy_source(policy_id, iam_client, eval_decision)
         if policy_type in ("User", "Group", "Role"):
             return _fetch_inline_policy_source(
-                policy_id, policy_type, principal, iam_client
+                policy_id, policy_type, principal, iam_client, eval_decision
             )
         # Unknown type — return a minimal source with no statement text
         return PolicySource(
@@ -225,7 +232,12 @@ def _fetch_policy_source(
             sid=None,
             raw_statement=None,
         )
-    except (ClientError, Exception):
+    except ClientError:
+        logger.debug(
+            "Could not fetch policy source for %s (%s): insufficient permissions",
+            policy_id,
+            policy_type,
+        )
         return PolicySource(
             policy_id=policy_id,
             policy_type=policy_type,
@@ -237,7 +249,9 @@ def _fetch_policy_source(
         )
 
 
-def _fetch_managed_policy_source(policy_arn: str, iam_client) -> PolicySource:
+def _fetch_managed_policy_source(
+    policy_arn: str, iam_client, eval_decision: str = ""
+) -> PolicySource:
     pol = iam_client.get_policy(PolicyArn=policy_arn)["Policy"]
     version_id = pol["DefaultVersionId"]
     version = iam_client.get_policy_version(PolicyArn=policy_arn, VersionId=version_id)[
@@ -245,8 +259,7 @@ def _fetch_managed_policy_source(policy_arn: str, iam_client) -> PolicySource:
     ]
     document = version["Document"]
     statements = document.get("Statement", [])
-    # Return the first statement as a representative (caller can inspect all)
-    raw = statements[0] if statements else None
+    raw = _select_statement(statements, eval_decision)
     effect = raw.get("Effect") if raw else None
     actions = _normalize_list(raw.get("Action", [])) if raw else ()
     resources = _normalize_list(raw.get("Resource", [])) if raw else ()
@@ -267,6 +280,7 @@ def _fetch_inline_policy_source(
     policy_type: str,
     principal: PrincipalInfo,
     iam_client,
+    eval_decision: str = "",
 ) -> PolicySource:
     """
     Fetch an inline policy document.
@@ -285,7 +299,7 @@ def _fetch_inline_policy_source(
         document = resp["PolicyDocument"]
 
     statements = document.get("Statement", [])
-    raw = statements[0] if statements else None
+    raw = _select_statement(statements, eval_decision)
     effect = raw.get("Effect") if raw else None
     actions = _normalize_list(raw.get("Action", [])) if raw else ()
     resources = _normalize_list(raw.get("Resource", [])) if raw else ()
@@ -299,6 +313,23 @@ def _fetch_inline_policy_source(
         sid=sid,
         raw_statement=raw,
     )
+
+
+def _select_statement(statements: list[dict], eval_decision: str) -> dict | None:
+    """Pick the most relevant statement based on eval_decision.
+
+    For explicit deny decisions, prefer Deny statements. For allowed
+    decisions, prefer Allow statements. Falls back to the first statement.
+    """
+    if not statements:
+        return None
+    if len(statements) == 1:
+        return statements[0]
+    target = "Deny" if "Deny" in eval_decision else "Allow"
+    for s in statements:
+        if s.get("Effect") == target:
+            return s
+    return statements[0]
 
 
 def _normalize_list(value: str | list) -> list[str]:

@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
-    { name = "Specter099", email = "bel136@gmail.com" }
+    { name = "Specter099" }
 ]
 keywords = ["aws", "iam", "security", "cli"]
 classifiers = [
@@ -26,9 +26,9 @@ classifiers = [
     "Topic :: System :: Systems Administration",
 ]
 dependencies = [
-    "boto3>=1.34",
-    "click>=8.1",
-    "rich>=13.0",
+    "boto3>=1.34,<2",
+    "click>=8.1,<9",
+    "rich>=13.0,<14",
 ]
 
 [project.scripts]
@@ -36,11 +36,12 @@ iamwhy = "iamwhy.cli:main"
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.0",
-    "pytest-mock>=3.12",
-    "moto[iam]>=5.0",
-    "coverage[toml]>=7.0",
-    "ruff>=0.8",
+    "pytest>=8.0,<9",
+    "pytest-mock>=3.12,<4",
+    "moto[iam]>=5.0,<6",
+    "coverage[toml]>=7.0,<8",
+    "ruff>=0.8,<1",
+    "pip-audit>=2.7,<3",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -63,4 +64,7 @@ target-version = "py311"
 line-length = 88
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W"]
+select = ["E", "F", "I", "W", "S", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]  # assert is expected in tests

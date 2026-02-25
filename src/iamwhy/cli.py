@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import sys
 
 import boto3
@@ -50,6 +51,12 @@ from .simulator import SimulationError, build_context_entries, simulate
     envvar="AWS_DEFAULT_REGION",
     help="AWS region.",
 )
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    help="Enable debug logging.",
+)
 def main(
     principal: str,
     action: str,
@@ -58,6 +65,7 @@ def main(
     output: str,
     profile: str | None,
     region: str | None,
+    debug: bool,
 ) -> None:
     """Explain why an AWS IAM action is denied for a given principal.
 
@@ -66,6 +74,13 @@ def main(
 
     Exit code is 0 for allowed, 1 for denied.
     """
+    # Configure logging
+    logging.basicConfig(
+        level=logging.DEBUG if debug else logging.WARNING,
+        format="%(name)s %(levelname)s: %(message)s",
+        stream=sys.stderr,
+    )
+
     # Diagnostics (errors) go to stderr; verdicts go to stdout.
     err = Console(stderr=True, highlight=False)
 
@@ -112,8 +127,7 @@ def main(
         sys.exit(2)
 
     # 5. Analyze
-    fetch = output != "json"  # skip GetPolicyVersion for JSON — reduces API calls
-    verdict = analyze(sim_result, principal_info, iam, fetch_statements=fetch)
+    verdict = analyze(sim_result, principal_info, iam, fetch_statements=True)
 
     # 6. Format and output
     out_console = Console(highlight=False)
