@@ -33,12 +33,12 @@ These make the difference between people starring and people contributing.
 
 Add these once you have active users or contributors.
 
-- [ ] **CODEOWNERS file** — Auto-assign reviewers by file path.
-- [ ] **CHANGELOG.md** — Track notable changes per release using [semantic versioning](https://semver.org/).
+- [x] **CODEOWNERS file** — Auto-assign reviewers by file path.
+- [x] **CHANGELOG.md** — Track notable changes per release using [semantic versioning](https://semver.org/).
 - [ ] **Automated releases** — Tag-based releases with auto-generated changelogs.
-- [ ] **Stale bot** — Auto-close inactive issues and PRs after a configurable grace period.
-- [ ] **Enable Discussions** — Offload Q&A and general conversation from issues.
-- [ ] **Semantic versioning** — Maintain a predictable release cadence.
+- [x] **Stale bot** — Auto-close inactive issues and PRs after a configurable grace period.
+- [x] **Enable Discussions** — Offload Q&A and general conversation from issues.
+- [x] **Semantic versioning** — Maintain a predictable release cadence.
 
 ## P4 — Governance & Scale (When It Matters)
 
