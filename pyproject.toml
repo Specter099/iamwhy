@@ -28,7 +28,7 @@ classifiers = [
 dependencies = [
     "boto3>=1.34,<2",
     "click>=8.1,<9",
-    "rich>=13.0,<15",
+    "rich>=13.0,<16",
 ]
 
 [project.scripts]
