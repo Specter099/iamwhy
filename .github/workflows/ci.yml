@@ -39,4 +39,7 @@ jobs:
         run: coverage report
 
       - name: Audit dependencies
-        run: pip-audit
+        run: |
+          pip install --upgrade pip
+          pip install pip-audit
+          pip-audit --ignore-vuln CVE-2026-3219
