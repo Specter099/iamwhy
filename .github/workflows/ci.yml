@@ -39,7 +39,12 @@ jobs:
         run: coverage report
 
       - name: Audit dependencies
+        # pip-audit scans the whole interpreter environment, including the
+        # runner toolcache's bundled setuptools (79.0.1 on Python 3.11), which
+        # is not a project dependency (the build backend is hatchling). Upgrade
+        # it past PYSEC-2026-3447 (fixed 83.0.0) and GHSA-xmj3-9gf7-h52w
+        # (fixed 84.1.0) so the audit reflects a patched toolchain.
         run: |
-          pip install --upgrade pip
-          pip install pip-audit
-          pip-audit --ignore-vuln CVE-2026-3219
+          python -m pip install --upgrade pip "setuptools>=84.1.0"
+          python -m pip install pip-audit
+          pip-audit
