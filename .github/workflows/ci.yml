@@ -6,42 +6,21 @@ on:
   pull_request:
     branches: [main]
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.11", "3.12"]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: pip install -e ".[dev]"
-
-      - name: Lint
-        run: ruff check src/ tests/
-
-      - name: Format check
-        run: ruff format --check src/ tests/
-
-      - name: Run tests with coverage
-        run: coverage run -m pytest
-
-      - name: Check coverage threshold
-        run: coverage report
-
-      - name: Audit dependencies
-        run: |
-          pip install --upgrade pip
-          pip install pip-audit
-          # The runner's setuptools (79.0.1) has advisories fixed in 83.0.0 and 84.1.0.
-          pip install --upgrade "setuptools>=84.1.0"
-          pip-audit --ignore-vuln CVE-2026-3219
+  ci:
+    uses: Specter099/.github/.github/workflows/python-ci.yml@main
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: read
+    with:
+      python-versions: '["3.11","3.12"]'
+      # setuptools: the runner's 79.0.1 has advisories fixed in 83.0.0 and 84.1.0.
+      install-command: "pip install --upgrade -e .[dev] setuptools>=84.1.0"
+      lint-paths: "src tests"
+      coverage: true
+      coverage-threshold: 80
+      pip-audit: true
+      pip-audit-args: "--ignore-vuln CVE-2026-3219"
