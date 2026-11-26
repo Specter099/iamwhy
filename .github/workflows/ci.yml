@@ -42,4 +42,6 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install pip-audit
+          # The runner's setuptools (79.0.1) has advisories fixed in 83.0.0 and 84.1.0.
+          pip install --upgrade "setuptools>=84.1.0"
           pip-audit --ignore-vuln CVE-2026-3219
